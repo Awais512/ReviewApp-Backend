@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel');
 const EmailVerificationToken = require('../models/emailVerificationToken');
 const nodemailer = require('nodemailer');
+const { isValidObjectId } = require('mongoose');
 
 //Register User
 const register = asyncHandler(async (req, res) => {
@@ -47,6 +48,26 @@ const register = asyncHandler(async (req, res) => {
   res.status(201).json({
     message: 'Please Verify your Email. OTP has been sent to your email...',
   });
+});
+
+//Verify Email
+const verifyEmail = asyncHandler(async (req, res) => {
+  const { userId, OTP } = req.body;
+  if (!isValidObjectId(userId)) {
+    res.status(400).json({ error: 'Invalid User' });
+  }
+  const user = await User.findById(userId);
+
+  if (!user) {
+    res.status(400).json({ error: 'User Not Found' });
+  }
+  if (user.isVerified) {
+    return res.status(400).json({ error: 'User is already Verified' });
+  }
+  const token = await EmailVerificationToken.findOne({ owner: userId });
+  if (!token) {
+    res.status(400).json({ error: 'Token is invalid or Expire' });
+  }
 });
 
 //Login User
