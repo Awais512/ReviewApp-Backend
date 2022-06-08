@@ -68,6 +68,31 @@ const verifyEmail = asyncHandler(async (req, res) => {
   if (!token) {
     res.status(400).json({ error: 'Token is invalid or Expire' });
   }
+  const isMatched = await token.compareToken(OTP);
+  if (!isMatched) {
+    return res.status(400).json({ error: 'Invalid OTP...' });
+  }
+  user.isVerified = true;
+  await user.save();
+  await EmailVerificationToken.findByIdAndDelete(token._id);
+
+  var transport = nodemailer.createTransport({
+    host: process.env.MAILTRAP_HOST,
+    port: process.env.MAILTRAP_PORT,
+    auth: {
+      user: process.env.MAILTRAP_USER,
+      pass: process.env.MAILTRAP_PASS,
+    },
+  });
+  transport.sendMail({
+    from: 'verification@reviewapp.com',
+    to: user.email,
+    subject: 'Email Verified',
+    html: `
+    <h1>Welcome to Our app.</h1>
+    `,
+  });
+  res.status(200).json({ message: 'Your Email has been verified' });
 });
 
 //Login User
@@ -75,4 +100,4 @@ const login = asyncHandler(async (req, res) => {
   res.send('login');
 });
 
-module.exports = { register, login };
+module.exports = { register, login, verifyEmail };
