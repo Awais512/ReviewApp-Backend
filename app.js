@@ -1,11 +1,11 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import morgan from 'morgan';
+const express = require('express');
+const dotenv = require('dotenv');
+const morgan = require('morgan');
 dotenv.config();
 
 //Route files Import
-import userRoutes from './routes/userRoutes.js';
-import connectDb from './db.js';
+const userRoutes = require('./routes/userRoutes');
+const connectDb = require('./db');
 const app = express();
 
 //Connecting to Mongodb

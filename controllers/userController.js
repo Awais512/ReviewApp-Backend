@@ -1,5 +1,5 @@
-import asyncHandler from 'express-async-handler';
-import User from '../models/userModel.js';
+const asyncHandler = require('express-async-handler');
+const User = require('../models/userModel');
 
 //Register User
 const register = asyncHandler(async (req, res) => {
@@ -17,4 +17,4 @@ const login = asyncHandler(async (req, res) => {
   res.send('login');
 });
 
-export { register, login };
+module.exports = { register, login };
