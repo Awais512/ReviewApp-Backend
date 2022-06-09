@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const { errorHandler } = require('./middlewares/error');
 dotenv.config();
 
 //Route files Import
@@ -19,9 +20,9 @@ if (process.env.NODE_ENV === 'dev') {
 
 //Route Middlewares
 app.use('/api/users', userRoutes);
-app.get('/test', (req, res) => {
-  res.send('Hiiiiii');
-});
+
+app.use(errorHandler);
+
 app.listen(process.env.PORT, () =>
   console.log(`Server is Running on Port ${process.env.PORT}`)
 );
