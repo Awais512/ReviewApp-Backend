@@ -171,6 +171,45 @@ const forgotPassword = asyncHandler(async (req, res) => {
   res.json({ message: 'Link sent to your email!' });
 });
 
+//Check Reset Password Token Status
+const sendResetPasswordTokenStatus = asyncHandler(async (req, res) => {
+  res.json({ valid: true });
+});
+
+//Reset Password
+const resetPassword = asyncHandler(async (req, res) => {
+  const { newPassword, userId } = req.body;
+  const user = await User.findById(userId);
+  const matched = await user.comparePassword(newPassword);
+  if (matched)
+    return sendError(
+      res,
+      'The new password must be different from the old one!'
+    );
+
+  user.password = newPassword;
+  await user.save();
+
+  await PasswordResetToken.findByIdAndDelete(req.resetToken._id);
+
+  const transport = generateMailTransporter();
+
+  transport.sendMail({
+    from: 'security@reviewapp.com',
+    to: user.email,
+    subject: 'Password Reset Successfully',
+    html: `
+      <h1>Password Reset Successfully</h1>
+      <p>Now you can use new password.</p>
+
+    `,
+  });
+
+  res.json({
+    message: 'Password reset successfully, now you can use new password.',
+  });
+});
+
 //Login User
 const login = asyncHandler(async (req, res) => {
   res.send('login');
@@ -182,4 +221,6 @@ module.exports = {
   verifyEmail,
   resendEmailVerificationToken,
   forgotPassword,
+  sendResetPasswordTokenStatus,
+  resetPassword,
 };
