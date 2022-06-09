@@ -16,7 +16,7 @@ const register = asyncHandler(async (req, res) => {
   // generate 6 digit OTP
 
   let OTP = '';
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i <= 5; i++) {
     const randomVal = Math.round(Math.random() * 9);
     OTP += randomVal;
   }
@@ -95,9 +95,61 @@ const verifyEmail = asyncHandler(async (req, res) => {
   res.status(200).json({ message: 'Your Email has been verified' });
 });
 
+//Resend Email Verification Token
+const resendEmailVerificationToken = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  if (user.isVerified) {
+    return res.status(404).json({ error: 'Email is already verified' });
+  }
+  const hastoken = await EmailVerificationToken.findByIdAndDelete(token._id);
+  if (hastoken) {
+    return res.status(404).json({
+      error: 'Only after one hour You can request a new token after one hour',
+    });
+  }
+
+  let OTP = '';
+  for (let i = 0; i <= 5; i++) {
+    const randomVal = Math.round(Math.random() * 9);
+    OTP += randomVal;
+  }
+
+  const newEmailVerificationToken = new EmailVerificationToken({
+    owner: user._id,
+    token: OTP,
+  });
+  await newEmailVerificationToken.save();
+
+  var transport = nodemailer.createTransport({
+    host: process.env.MAILTRAP_HOST,
+    port: process.env.MAILTRAP_PORT,
+    auth: {
+      user: process.env.MAILTRAP_USER,
+      pass: process.env.MAILTRAP_PASS,
+    },
+  });
+  transport.sendMail({
+    from: 'verification@reviewapp.com',
+    to: user.email,
+    subject: 'Email Verification',
+    html: `
+    <p>Your Verification OTP</p>
+    <p>${OTP}</p>
+
+    `,
+  });
+  res.status(201).json({
+    message: 'Please Verify your Email. OTP has been sent to your email...',
+  });
+});
+
 //Login User
 const login = asyncHandler(async (req, res) => {
   res.send('login');
 });
 
-module.exports = { register, login, verifyEmail };
+module.exports = { register, login, verifyEmail, resendEmailVerificationToken };
