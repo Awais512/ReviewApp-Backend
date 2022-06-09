@@ -7,7 +7,7 @@ const {
   generateOTP,
   generateMailTransporter,
 } = require('../utils/generateOTP');
-const { sendError } = require('../utils/helper');
+const { sendError, generateRandomByte } = require('../utils/helper');
 
 //Register User
 const register = asyncHandler(async (req, res) => {
@@ -132,6 +132,7 @@ const resendEmailVerificationToken = asyncHandler(async (req, res) => {
   });
 });
 
+//Forgot Password
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -142,9 +143,32 @@ const forgotPassword = asyncHandler(async (req, res) => {
     sendError(res, 'User not found', 404);
   }
   const hasToken = await PasswordResetToken.findOne({ owner: user._id });
-  if (!hasToken) {
+  if (hasToken) {
     sendError(res, 'Only After one hour you can get token', 400);
   }
+  const token = await generateRandomByte();
+  const newPasswordResetToken = await PasswordResetToken({
+    owner: user._id,
+    token,
+  });
+  await newPasswordResetToken.save();
+
+  const resetPasswordUrl = `http://localhost:3000/reset-password?token=${token}&id=${user._id}`;
+
+  const transport = generateMailTransporter();
+
+  transport.sendMail({
+    from: 'security@reviewapp.com',
+    to: user.email,
+    subject: 'Reset Password Link',
+    html: `
+      <p>Click here to reset password</p>
+      <a href='${resetPasswordUrl}'>Change Password</a>
+
+    `,
+  });
+
+  res.json({ message: 'Link sent to your email!' });
 });
 
 //Login User
