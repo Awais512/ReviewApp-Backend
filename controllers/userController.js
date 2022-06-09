@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel');
 const EmailVerificationToken = require('../models/emailVerificationToken');
-const nodemailer = require('nodemailer');
+const PasswordResetToken = require('../models/passwordResetToken');
 const { isValidObjectId } = require('mongoose');
 const {
   generateOTP,
@@ -132,9 +132,30 @@ const resendEmailVerificationToken = asyncHandler(async (req, res) => {
   });
 });
 
+const forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) {
+    sendError(res, 'Email is missing', 400);
+  }
+  const user = await User.findOne({ email });
+  if (!user) {
+    sendError(res, 'User not found', 404);
+  }
+  const hasToken = await PasswordResetToken.findOne({ owner: user._id });
+  if (!hasToken) {
+    sendError(res, 'Only After one hour you can get token', 400);
+  }
+});
+
 //Login User
 const login = asyncHandler(async (req, res) => {
   res.send('login');
 });
 
-module.exports = { register, login, verifyEmail, resendEmailVerificationToken };
+module.exports = {
+  register,
+  login,
+  verifyEmail,
+  resendEmailVerificationToken,
+  forgotPassword,
+};
