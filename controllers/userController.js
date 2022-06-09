@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const jwt = require('jsonwebtoken');
 const User = require('../models/userModel');
 const EmailVerificationToken = require('../models/emailVerificationToken');
 const PasswordResetToken = require('../models/passwordResetToken');
@@ -212,7 +213,20 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 //Login User
 const login = asyncHandler(async (req, res) => {
-  res.send('login');
+  const { email, password } = req.body;
+  const user = await User.findOne({ email });
+  if (!user) {
+    return sendError(res, 'Invalid credentials', 400);
+  }
+  const matched = await user.comparePassword(password);
+  if (!matched) {
+    return sendError(res, 'Invalid credentials', 400);
+  }
+  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    expiresIn: '7h',
+  });
+  const { _id, name } = user;
+  res.json({ user: { id: _id, name, email, token } });
 });
 
 module.exports = {
