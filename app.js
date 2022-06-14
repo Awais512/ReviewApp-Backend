@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const morgan = require('morgan');
+const cors = require('cors');
 const { errorHandler } = require('./middlewares/error');
 dotenv.config();
 
@@ -14,6 +15,7 @@ connectDb();
 
 //App Middleware
 app.use(express.json());
+app.use(cors());
 if (process.env.NODE_ENV === 'dev') {
   app.use(morgan('dev'));
 }
