@@ -8,6 +8,7 @@ dotenv.config();
 //Route files Import
 const userRoutes = require('./routes/userRoutes');
 const connectDb = require('./db');
+const { handleNotFound } = require('./utils/helper');
 const app = express();
 
 //Connecting to Mongodb
@@ -23,6 +24,7 @@ if (process.env.NODE_ENV === 'dev') {
 //Route Middlewares
 app.use('/api/users', userRoutes);
 
+app.use('/*', handleNotFound);
 app.use(errorHandler);
 
 app.listen(process.env.PORT, () =>
