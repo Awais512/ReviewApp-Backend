@@ -41,7 +41,11 @@ const register = asyncHandler(async (req, res) => {
     `,
   });
   res.status(201).json({
-    message: 'Please Verify your Email. OTP has been sent to your email...',
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    },
   });
 });
 
