@@ -52,39 +52,34 @@ const register = asyncHandler(async (req, res) => {
 //Verify Email
 const verifyEmail = asyncHandler(async (req, res) => {
   const { userId, OTP } = req.body;
-  if (!isValidObjectId(userId)) {
-    res.status(400).json({ error: 'Invalid User' });
-  }
-  const user = await User.findById(userId);
 
-  if (!user) {
-    res.status(400).json({ error: 'User Not Found' });
-  }
-  if (user.isVerified) {
-    return res.status(400).json({ error: 'User is already Verified' });
-  }
+  if (!isValidObjectId(userId)) return res.json({ error: 'Invalid user!' });
+
+  const user = await User.findById(userId);
+  if (!user) return sendError(res, 'user not found!', 404);
+
+  if (user.isVerified) return sendError(res, 'user is already verified!');
+
   const token = await EmailVerificationToken.findOne({ owner: userId });
-  if (!token) {
-    res.status(400).json({ error: 'Token is invalid or Expire' });
-  }
+  if (!token) return sendError(res, 'token not found!');
+
   const isMatched = await token.compareToken(OTP);
-  if (!isMatched) {
-    return res.status(400).json({ error: 'Invalid OTP...' });
-  }
+  if (!isMatched) return sendError(res, 'Please submit a valid OTP!');
+
   user.isVerified = true;
   await user.save();
+
   await EmailVerificationToken.findByIdAndDelete(token._id);
 
   var transport = generateMailTransporter();
+
   transport.sendMail({
     from: 'verification@reviewapp.com',
     to: user.email,
-    subject: 'Email Verified',
-    html: `
-    <h1>Welcome to Our app.</h1>
-    `,
+    subject: 'Welcome Email',
+    html: '<h1>Welcome to our app and thanks for choosing us.</h1>',
   });
-  res.status(200).json({ message: 'Your Email has been verified' });
+  res.json({ message: 'Your email is verified.' });
 });
 
 //Resend Email Verification Token
