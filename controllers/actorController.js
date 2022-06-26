@@ -20,4 +20,39 @@ const createActor = asyncHandler(async (req, res) => {
   res.status(201).json(formatActor(newActor));
 });
 
-module.exports = { createActor };
+const updateActor = asyncHandler(async (req, res) => {
+  const { name, about, gender } = req.body;
+  const { file } = req;
+  const { actorId } = req.params;
+
+  if (!isValidObjectId(actorId)) return sendError(res, "Invalid request!");
+
+  const actor = await Actor.findById(actorId);
+  if (!actor) return sendError(res, "Invalid request, record not found!");
+
+  const public_id = actor.avatar?.public_id;
+
+  // remove old image if there was one!
+  if (public_id && file) {
+    const { result } = await cloudinary.uploader.destroy(public_id);
+    if (result !== "ok") {
+      return sendError(res, "Could not remove image from cloud!");
+    }
+  }
+
+  // upload new avatar if there is one!
+  if (file) {
+    const { url, public_id } = await uploadImageToCloud(file.path);
+    actor.avatar = { url, public_id };
+  }
+
+  actor.name = name;
+  actor.about = about;
+  actor.gender = gender;
+
+  await actor.save();
+
+  res.status(201).json(formatActor(actor));
+});
+
+module.exports = { createActor, updateActor };
