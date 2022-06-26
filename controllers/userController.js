@@ -81,7 +81,13 @@ const verifyEmail = asyncHandler(async (req, res) => {
   });
   const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET);
   res.json({
-    user: { id: user._id, name: user.name, email: user.email, token: jwtToken },
+    user: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      token: jwtToken,
+      isVerified: user.isVerified,
+    },
     message: "Your email is verified.",
   });
 });
@@ -157,7 +163,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
   });
   await newPasswordResetToken.save();
 
-  const resetPasswordUrl = `http://localhost:3000/reset-password?token=${token}&id=${user._id}`;
+  const resetPasswordUrl = `http://localhost:3000/auth/reset-password?token=${token}&id=${user._id}`;
 
   const transport = generateMailTransporter();
 
@@ -217,19 +223,18 @@ const resetPassword = asyncHandler(async (req, res) => {
 //Login User
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+
   const user = await User.findOne({ email });
-  if (!user) {
-    return sendError(res, "Invalid credentials", 400);
-  }
+  if (!user) return sendError(res, "Email/Password mismatch!");
+
   const matched = await user.comparePassword(password);
-  if (!matched) {
-    return sendError(res, "Invalid credentials", 400);
-  }
-  const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "7h",
-  });
-  const { _id, name } = user;
-  res.json({ user: { id: _id, name, email, token } });
+  if (!matched) return sendError(res, "Email/Password mismatch!");
+
+  const { _id, name, isVerified } = user;
+
+  const jwtToken = jwt.sign({ userId: _id }, process.env.JWT_SECRET);
+
+  res.json({ user: { id: _id, name, email, token: jwtToken, isVerified } });
 });
 
 module.exports = {
