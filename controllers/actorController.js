@@ -74,4 +74,9 @@ const deleteActor = asyncHandler(async (req, res) => {
   res.json({ message: "Record removed Successfully" });
 });
 
-module.exports = { createActor, updateActor, deleteActor };
+const searchActor = asyncHandler(async (req, res) => {
+  const { query } = req;
+  const result = await Actor.find({ $text: { $search: `"${query.name}"` } });
+});
+
+module.exports = { createActor, updateActor, deleteActor, searchActor };
