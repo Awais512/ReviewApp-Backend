@@ -34,8 +34,8 @@ router.post(
 );
 
 router.delete("/:actorId", isAuth, isAdmin, deleteActor);
-router.get("/search", searchActor);
-router.get("/", getLatestActors);
+router.get("/search", isAuth, isAdmin, searchActor);
+router.get("/", isAuth, isAdmin, getLatestActors);
 router.get("/:id", getSingleActor);
 
 module.exports = router;
