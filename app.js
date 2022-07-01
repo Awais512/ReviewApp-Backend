@@ -11,6 +11,7 @@ const app = express();
 //Route files Import
 const userRoutes = require("./routes/userRoutes");
 const actorRoutes = require("./routes/actorRoutes");
+const movieRoutes = require("./routes/movieRoutes");
 
 //Connecting to Mongodb
 connectDb();
@@ -25,6 +26,7 @@ if (process.env.NODE_ENV === "dev") {
 //Route Middlewares
 app.use("/api/users", userRoutes);
 app.use("/api/actors", actorRoutes);
+app.use("/api/movies", movieRoutes);
 
 app.use("/*", handleNotFound);
 app.use(errorHandler);
