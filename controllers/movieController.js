@@ -15,4 +15,22 @@ const uploadTrailer = asyncHandler(async (req, res) => {
   res.status(201).json({ url, public_id });
 });
 
-module.exports = { uploadTrailer };
+const createMovie = asyncHandler(async (req, res) => {
+  const { body, file } = req;
+  const {
+    title,
+    storyLine,
+    director,
+    releaseDate,
+    status,
+    type,
+    genres,
+    cast,
+    writers,
+    poster,
+    trailer,
+    language,
+  } = body;
+});
+
+module.exports = { uploadTrailer, createMovie };
